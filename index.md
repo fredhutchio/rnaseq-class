@@ -213,9 +213,9 @@ We'll use [DESeq2](http://genomebiology.biomedcentral.com/articles/10.1186/s1305
 Change the following settings from their defaults:
 
 * Factor 1 > Specify a factor name: **condition**
-* Factor 1 > Factor level 1 > Specify a factor level **c1**
+* Factor 1 > Factor level 1 > Specify a factor level: **c1**
 * Factor 1 > Factor level 1 > Counts file(s): (click "collections" icon) **htseq-count collection for condition 1 from step 6a**
-* Factor 1 > Factor level 2 > Specify a factor level **c2**
+* Factor 1 > Factor level 2 > Specify a factor level: **c2**
 * Factor 1 > Factor level 2 > Counts file(s): (click "collections" icon) **htseq-count collection for condition 2 from step 6b**
 
 Remember that the condition 1 collection will have the smaller ID number!
