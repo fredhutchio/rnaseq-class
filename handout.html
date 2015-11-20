@@ -1,0 +1,190 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="rna-seq-differential-expression-analysis-using-galaxy">RNA-seq differential expression analysis using Galaxy</h1>
+<h2 id="getting-started">0. Getting started</h2>
+<p>Log in or register on the Fred Hutch Galaxy server at <a href="http://galaxy.fredhutch.org" class="uri">http://galaxy.fredhutch.org</a>. If your current history isn't empty, create a new one by clicking the gear icon at the top of the history pane to open the <em>History options</em> menu and selecting <em>Create New</em>.</p>
+<div class="figure">
+<img src="images/00-new-history.png" alt="" />
+
+</div>
+<p>Next, click on the history name, which defaults to &quot;Unnamed history&quot;, and give it a more memorable name. (You'll have to hit the return key to save it; you can't just click away.)</p>
+<h2 id="importing-data-from-a-data-library">1. Importing data from a data library</h2>
+<p>The data we'll be using is from a <em>Drosophila melanogaster</em> RNA-seq experiment. Next we’ll import the reads sequenced for this experiment from a shared data library into our history. In the menu bar, navigate to <em>Shared Data &gt; Data Libraries</em> and select the “RNA-seq tutorial data” library.</p>
+<div class="figure">
+<img src="images/01-data-libraries.png" alt="" />
+
+</div>
+<p>Tick the checkbox next to &quot;Name&quot; up at the top to select all 12 files in the library. Make sure &quot;Import to current history&quot; is selected in the dropdown box at the bottom and then click <em>Go</em>.</p>
+<div class="figure">
+<img src="images/02-data-libraries-import.png" alt="" />
+
+</div>
+<p>Return to the main Galaxy view by clicking <em>Analyze Data</em> in the menu bar.</p>
+<h2 id="combining-datasets-into-collections">2. Combining datasets into collections</h2>
+<p>The data for this experiment are paired-end (forward and reverse) reads for two experimental conditions, with three replicates for each condition. To speed up the analysis for the purpose of this tutorial, the reads have been filtered to exclude all but the X chromosome.</p>
+<p>The filenames are encoded as follows:</p>
+<pre><code>&lt;condition&gt;-&lt;replicate&gt;-&lt;forward|reverse&gt;-x.fq</code></pre>
+<p>For example, the file</p>
+<pre><code>c1-r2-f-x.fq
+</code></pre>
+<p>is a file containing condition 1 (<code>c1</code>), replicate 2 (<code>r2</code>) forward (<code>f</code>) reads on the X (<code>x</code>) chromosome in FASTQ (<code>fq</code>) format. All 12 files end in <code>x</code> to denote that the reads are from the X chromosome.</p>
+<p>To make the analysis easier, we'll combine the datasets for each condition into a <em>collection</em>: specifically, a <em>list of dataset pairs</em>. Each sample's forward and reverse reads are associated into a dataset pair, and those dataset pairs are associated into one list for each condition.</p>
+<h3 id="a.-building-the-condition-1-collection">2a. Building the condition 1 collection</h3>
+<p>First, click the <em>Operations on multiple datasets</em> button near the top of the history pane.</p>
+<div class="figure">
+<img src="images/03-history-operations.png" alt="" />
+
+</div>
+<p>This adds checkboxes next to each dataset. We'll build the list of dataset pairs for condition 1 first, so tick the checkboxes next to each of the six files that begin with <code>c1</code>. Then, back up near the top of the history pane, click <em>For all selected... &gt; Build List of Dataset Pairs</em>.</p>
+<div class="figure">
+<img src="images/04-c1-build-collection.png" alt="" />
+
+</div>
+<p>In the window that opens, you'll see two text entry fields, containing <code>_1</code> on the left and <code>_2</code> on the right. This is Galaxy's default guess at how to tell the forward (left) and reverse (right) reads apart by filename, but in this case it's gotten it wrong. Instead, type in <code>-f-x</code> in the left field and <code>-r-x</code> in the right field, and the datasets will appear. Double-check that the datasets are paired up correctly (<code>c1-r1-f-x.fq</code> with <code>c1-r1-r-x.fq</code> and so on), then click <em>Pair these datasets</em> for each pair.</p>
+<div class="figure">
+<img src="images/05-c1-filter.png" alt="" />
+
+</div>
+<p>At the very bottom of the window, give the new collection a name like &quot;condition 1 reads&quot; and click <em>Create list</em>.</p>
+<div class="figure">
+<img src="images/06-c1-pair-and-name.png" alt="" />
+
+</div>
+<h3 id="b.-building-the-condition-2-collection">2b. Building the condition 2 collection</h3>
+<p>Clear the checkboxes for the six files that begin with <code>c1</code> and tick those next to the six files that begin with <code>c2</code> instead. Then follow the same steps as above for filtering, pairing, naming, and creating the list for the condition 2 datasets.</p>
+<p>Finally, click the <em>Operations on multiple datasets</em> button again to turn off the checkboxes.</p>
+<h2 id="fetching-a-gene-annotation-from-ucsc">3. Fetching a gene annotation from UCSC</h2>
+<p>Next we'll fetch a gene annotation using the UCSC Table Browser. This tool allows access to the same data available for visualization in the UCSC Genome Browser.</p>
+<p>In the tool pane on the left hand side, select <em>Get Data &gt; UCSC Main</em>. Use the following settings:</p>
+<ul>
+<li>clade: <strong>Insect</strong></li>
+<li>genome: <strong>D. melanogaster</strong></li>
+<li>assembly: <strong>Apr. 2006 (BDGP R5/dm3)</strong></li>
+<li>group: <strong>Genes and Gene Predictions</strong></li>
+<li>track: <strong>RefSeq Genes</strong></li>
+<li>region: (select <em>position</em>) <strong>chrX</strong></li>
+<li>output format: <strong>GTF - gene transfer format</strong></li>
+</ul>
+<p>It should look like the following:</p>
+<div class="figure">
+<img src="images/07-ucsc-main.png" alt="" />
+
+</div>
+<p>Once you're satisfied the settings are correct, click the <em>Get output</em> button near the bottom of the page, then click <em>Send query to Galaxy</em> on the next page. After a moment you'll be returned to the main Galaxy view and a new queued GTF dataset will appear in your history.</p>
+<p>It's worth mentioning at this point that in most cases jobs can be configured and submitted even if the datasets they depend on are still queued or running -- so you can continue on even if you're still waiting for the GTF to download.</p>
+<h2 id="mapping-reads-with-tophat">4. Mapping reads with TopHat</h2>
+<p><a href="https://ccb.jhu.edu/software/tophat/index.shtml">TopHat</a> is a splice-aware mapper designed for RNA-seq reads.</p>
+<p>One thing we'll need to know in order to improve the mapping accuracy is the mean inner distance between the paired reads. That distance is determined as follows. From the wet lab that produced this data, the insert size is given as 178 bp. The reads are paired-end with a read length of 75 bp. Thus the expected inner distance between mate pairs is 178 - (75 + 75) = 28 bp.</p>
+<h3 id="a.-mapping-condition-1-reads">4a. Mapping condition 1 reads</h3>
+<p>In the tool pane, select <em>NGS: Mapping &gt; TopHat</em>. Change the following settings from their defaults:</p>
+<ul>
+<li>Is this single-end or paired-end data: <strong>Paired-end (as collection)</strong></li>
+<li>RNA-Seq FASTQ paired reads: <strong>condition 1 collection from step 2a</strong></li>
+<li>Mean Inner Distance between Mate Pairs: <strong>28</strong> (see above)</li>
+<li>Select a reference genome: <strong>Fruit Fly (Drosophila melanogaster): dm3</strong></li>
+<li>TopHat settings to use: <strong>Full parameter list</strong></li>
+</ul>
+<div class="figure">
+<img src="images/08-tophat-basic.png" alt="" />
+
+</div>
+<p>Selecting &quot;Full parameter list&quot; will reveal many more parameters. Scroll down a ways through the expanded parameters, and set the following:</p>
+<ul>
+<li>Do you want to supply your own junction data: <strong>Yes</strong></li>
+<li>Use Gene Annotation Model: <strong>Yes</strong></li>
+<li>Gene Model Annotations: <strong>UCSC Main RefSeq genes GTF from step 3</strong></li>
+</ul>
+<div class="figure">
+<img src="images/09-tophat-junction-data.png" alt="" />
+
+</div>
+<p>Finally, click the <em>Execute</em> at the bottom of the options to submit the job.</p>
+<h3 id="b.-mapping-condition-2-reads">4b. Mapping condition 2 reads</h3>
+<p>Follow the same steps as above, except for the following setting:</p>
+<ul>
+<li>RNA-Seq FASTQ paired reads: <strong>condition 2 collection from step 2b</strong></li>
+</ul>
+<p>Now we have two sets of output collections from TopHat, one for condition 1, and another for condition 2. Unfortunately, TopHat does not carry over the name of the input collection to its outputs, but we do know that we submitted the job for condition 1 first -- so when we need to discern between them, the collection with the smaller ID number (next to the dataset name) corresponds to condition 1. We'll use this guideline in step 6.</p>
+<h2 id="examining-tophats-output">5. Examining TopHat's output</h2>
+<p>TopHat produces a number of files for each run. Specifically:</p>
+<ul>
+<li><code>align_summary</code> (text)</li>
+<li><code>insertions</code> (BED)</li>
+<li><code>deletions</code> (BED)</li>
+<li><code>splice_junctions</code> (BED)</li>
+<li><code>accepted_hits</code> (BAM)</li>
+</ul>
+<p>In the next step, we'll be using the <code>accepted_hits</code> datasets, which are the mapped and aligned reads, to determine the expression levels of the genes annotated in the GTF we obtained from UCSC.</p>
+<p>Before that, though, click on one of the <code>align_summary</code> collections, then click the eye icon to view one of the datasets in the collection. Since the reads we're using for this tutorial all have pretty high quality scores, the mapping and alignment rates shown should be very high. If they're not, something went wrong!</p>
+<p>If you ever need to double-check your inputs, or you just want to see how a dataset was generated, you can click on the dataset name in the history to expand it, then click the &quot;information&quot; icon to see the dataset details.</p>
+<div class="figure">
+<img src="images/08a-dataset-info.png" alt="" />
+
+</div>
+<p>Along with some internal information about the dataset, the tool parameters used to generate the dataset will be listed at the bottom of the details page.</p>
+<h2 id="counting-reads-mapping-to-genes-with-htseq-count">6. Counting reads mapping to genes with htseq-count</h2>
+<p>To determine the gene expression levels in each sample, we'll use <a href="http://www-huber.embl.de/users/anders/HTSeq/doc/count.html">htseq-count</a>.</p>
+<h3 id="a.-counting-condition-1-hits">6a. Counting condition 1 hits</h3>
+<p>In the tool pane, select <em>NGS: RNA-Seq &gt; htseq-count</em>. Change the following settings from their defaults:</p>
+<ul>
+<li>Aligned SAM/BAM File: (click &quot;collections&quot; icon) <strong>TopHat accepted_hits for condition 1 from step 4a</strong></li>
+<li>GFF File: <strong>UCSC Main RefSeq genes GTF from step 3</strong></li>
+<li>Stranded: <strong>No</strong></li>
+</ul>
+<p>Remember that the condition 1 collection will have the smaller ID number!</p>
+<p>Finally, click the <em>Execute</em> button to submit the job.</p>
+<h3 id="b.-counting-condition-2-hits">6b. Counting condition 2 hits</h3>
+<p>Follow the same steps as above, except for the following setting:</p>
+<ul>
+<li>Aligned SAM/BAM File: (click &quot;collections&quot; icon) <strong>TopHat accepted_hits for condition 2 from step 4b</strong></li>
+</ul>
+<p>Remember that the condition 2 collection will have the larger ID number!</p>
+<h2 id="testing-for-differential-expression-with-deseq2">7. Testing for differential expression with DESeq2</h2>
+<p>We'll use <a href="http://genomebiology.biomedcentral.com/articles/10.1186/s13059-014-0550-8">DESeq2</a> to test for differential expression, partly because it's quite fast, and partly because it works well for small studies with few replicates.</p>
+<p>Change the following settings from their defaults:</p>
+<ul>
+<li>Factor 1 &gt; Specify a factor name: <strong>condition</strong></li>
+<li>Factor 1 &gt; Factor level 1 &gt; Specify a factor level <strong>c1</strong></li>
+<li>Factor 1 &gt; Factor level 1 &gt; Counts file(s): (click &quot;collections&quot; icon) <strong>htseq-count collection for condition 1 from step 4a</strong></li>
+<li>Factor 1 &gt; Factor level 2 &gt; Specify a factor level <strong>c2</strong></li>
+<li>Factor 1 &gt; Factor level 2 &gt; Counts file(s): (click &quot;collections&quot; icon) <strong>htseq-count collection for condition 2 from step 4b</strong></li>
+</ul>
+<p>Remember that the condition 1 collection will have the smaller ID number! The factor and factor level names can be anything you wish provided that they contain only letters, numbers, and underscores.</p>
+<p>It should look like the following:</p>
+<div class="figure">
+<img src="images/11-deseq2.png" alt="" />
+
+</div>
+<p>After setting the above parameters, click the <em>Execute</em> button to submit the job.</p>
+<h2 id="examining-results">8. Examining results</h2>
+<p>DESeq2 produces both graphical and tabular output. The plots are:</p>
+<ul>
+<li>principal component analysis</li>
+<li>sample clustering</li>
+<li>dispersion estimates</li>
+<li>a histogram of p-values</li>
+<li>an MA plot of log<sub>2</sub> fold change vs. mean normalized counts across all samples and replicates</li>
+</ul>
+<p>From the sample clustering and the principal component analysis plots, does it look like there is a difference between the samples for condition 1 and condition 2?</p>
+<p>In the MA plot, red points denote significant (FDR-adjusted p &lt; 0.05) differences in expression of a gene, while black points denote insignificant differences. Are there any significant differences?</p>
+<p>The tabular output can also help you answer that last question. It contains seven columns:</p>
+<ul>
+<li>gene ID</li>
+<li>mean normalized counts</li>
+<li>log<sub>2</sub> fold change</li>
+<li>log<sub>2</sub> fold change error</li>
+<li>test statistic</li>
+<li>p-value</li>
+<li>FDR-adjusted p-value</li>
+</ul>
+<p>Are there any rows for which the 7th column is less than 0.05? If so, for what gene ID(s)?</p>
+</body>
+</html>
